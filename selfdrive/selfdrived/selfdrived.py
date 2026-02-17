@@ -193,10 +193,26 @@ class SelfdriveD:
           self.events.add(EventName.pcmEnable)
 
       # Disable on rising edge of accelerator or brake. Also disable on brake when speed > 0
-      if (CS.gasPressed and not self.CS_prev.gasPressed and self.disengage_on_accelerator) or \
-        (CS.brakePressed and (not self.CS_prev.brakePressed or not CS.standstill)) or \
-        (CS.regenBraking and (not self.CS_prev.regenBraking or not CS.standstill)):
-        self.events.add(EventName.pedalPressed)
+      # Pass Mode: Bypass pedal disengagement checks if Pass Mode is active (Honda Clarity)
+      pass_mode_active = hasattr(CS, 'passMode') and CS.passMode
+      
+      if pass_mode_active and self.sm.frame % 50 == 0:
+        cloudlog.info(f"[PassMode-Bypass] Pass Mode active - bypassing pedal checks")
+      
+      # Only check for disengagement if NOT in Pass Mode
+      if not pass_mode_active:
+        if (CS.gasPressed and not self.CS_prev.gasPressed and self.disengage_on_accelerator) or \
+          (CS.brakePressed and (not self.CS_prev.brakePressed or not CS.standstill)) or \
+          (CS.regenBraking and (not self.CS_prev.regenBraking or not CS.standstill)):
+          if self.sm.frame % 50 == 0:
+            cloudlog.info(f"[PassMode-Disengage] Pedal triggered disengagement: gas={CS.gasPressed}, brake={CS.brakePressed}, regen={CS.regenBraking}")
+          self.events.add(EventName.pedalPressed)
+      
+      # Add lkasOnly event when Pass Mode is active
+      if pass_mode_active:
+        if self.sm.frame % 50 == 0:
+          cloudlog.info(f"[PassMode-Event] Adding lkasOnly event")
+        self.events.add(EventName.lkasOnly)
 
     # Create events for temperature, disk space, and memory
     if self.sm['deviceState'].thermalStatus >= ThermalStatus.red:

@@ -729,6 +729,19 @@ EVENTS: dict[int, dict[str, Alert | AlertCallbackType]] = {
       Priority.LOWEST, VisualAlert.none, AudibleAlert.none, .1),
   },
 
+  EventName.lkasOnly: {
+    ET.WARNING: Alert(
+      "LKAS Only",
+      "ACC Disabled",
+      AlertStatus.normal, AlertSize.small,
+      Priority.LOW, VisualAlert.none, AudibleAlert.none, .2),
+    ET.OVERRIDE_LONGITUDINAL: Alert(
+      "",
+      "",
+      AlertStatus.normal, AlertSize.none,
+      Priority.LOWEST, VisualAlert.none, AudibleAlert.none, .1),
+  },
+
   EventName.steerOverride: {
     ET.OVERRIDE_LATERAL: Alert(
       "",
