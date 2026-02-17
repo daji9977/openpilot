@@ -95,3 +95,5 @@ Pipfile
 # Ignore all local history of files
 .history
 .ionide
+
+ai_context/
