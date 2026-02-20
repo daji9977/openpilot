@@ -284,29 +284,21 @@ class SelfdriveD:
                                                     LaneChangeState.laneChangeFinishing):
       self.events.add(EventName.laneChange)
 
-    # Pass Mode: Skip safety mismatch check when Pass Mode is active to prevent red alert on regen paddle press
-    # This allows the panda to safely disable controls while openpilot handles the transition gracefully
-    if not pass_mode_active:
-      for i, pandaState in enumerate(self.sm['pandaStates']):
-        # All pandas must match the list of safetyConfigs, and if outside this list, must be silent or noOutput
-        if i < len(self.CP.safetyConfigs):
-          safety_mismatch = pandaState.safetyModel != self.CP.safetyConfigs[i].safetyModel or \
-                            pandaState.safetyParam != self.CP.safetyConfigs[i].safetyParam or \
-                            pandaState.alternativeExperience != self.CP.alternativeExperience
-        else:
-          safety_mismatch = pandaState.safetyModel not in IGNORED_SAFETY_MODES
+    for i, pandaState in enumerate(self.sm['pandaStates']):
+      # All pandas must match the list of safetyConfigs, and if outside this list, must be silent or noOutput
+      if i < len(self.CP.safetyConfigs):
+        safety_mismatch = pandaState.safetyModel != self.CP.safetyConfigs[i].safetyModel or \
+                          pandaState.safetyParam != self.CP.safetyConfigs[i].safetyParam or \
+                          pandaState.alternativeExperience != self.CP.alternativeExperience
+      else:
+        safety_mismatch = pandaState.safetyModel not in IGNORED_SAFETY_MODES
 
-        # safety mismatch allows some time for pandad to set the safety mode and publish it back from panda
-        if (safety_mismatch and self.sm.frame*DT_CTRL > 10.) or pandaState.safetyRxChecksInvalid or self.mismatch_counter >= 200:
-          self.events.add(EventName.controlsMismatch)
+      # safety mismatch allows some time for pandad to set the safety mode and publish it back from panda
+      if (safety_mismatch and self.sm.frame*DT_CTRL > 10.) or pandaState.safetyRxChecksInvalid or self.mismatch_counter >= 200:
+        self.events.add(EventName.controlsMismatch)
 
-        if log.PandaState.FaultType.relayMalfunction in pandaState.faults:
-          self.events.add(EventName.relayMalfunction)
-    else:
-      # Reset mismatch counter when in Pass Mode to prevent accumulated errors
-      self.mismatch_counter = 0
-      if self.sm.frame % 50 == 0:
-        cloudlog.info(f"[PassMode-Safety] Bypassing safety mismatch check")
+      if log.PandaState.FaultType.relayMalfunction in pandaState.faults:
+        self.events.add(EventName.relayMalfunction)
 
     # Handle HW and system malfunctions
     # Order is very intentional here. Be careful when modifying this.
