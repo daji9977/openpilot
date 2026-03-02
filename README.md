@@ -1,3 +1,15 @@
+## Honda Clarity PHEV — Pass Mode (MADS)
+
+Pass Mode is a Modified Assistive Driving Safety (MADS) function for the Honda Clarity PHEV that allows the driver to take manual longitudinal control (coasting, regen braking) while openpilot continues to handle lateral (steering) control.
+
+| Action | Effect |
+|---|---|
+| **Regen paddle** (either) | Activates Pass Mode. openpilot suspends ACC and lets the driver control deceleration via regenerative braking. Steering remains active. |
+| **LKAS button** | Activates Pass Mode if not already active. |
+| **Accel / Resume button** | Exits Pass Mode and re-engages ACC. |
+
+---
+
 <div align="center" style="text-align: center;">
 
 <h1>openpilot</h1>
