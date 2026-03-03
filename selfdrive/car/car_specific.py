@@ -69,11 +69,16 @@ class CarSpecificEvents:
         elif not CS.cruiseState.enabled and (CC.actuators.accel >= 0. or not self.CP.openpilotLongitudinalControl):
           # it can happen that car cruise disables while comma system is enabled: need to
           # keep braking if needed or if the speed is very low
-          if CS.vEgo < self.CP.minEnableSpeed + 2.:
-            # non loud alert if cruise disables below 25mph as expected (+ a little margin)
-            events.add(EventName.speedTooLow)
-          else:
-            events.add(EventName.cruiseDisabled)
+          # Pass Mode: suppress cruise-disabled disengagement while lateral-only mode is active.
+          # Honda hybrids (Clarity) cancel ACC during regen paddle use as stock behavior;
+          # Pass Mode intentionally maintains lateral control through these cancellations.
+          pass_mode_active = hasattr(CS, 'passMode') and CS.passMode
+          if not pass_mode_active:
+            if CS.vEgo < self.CP.minEnableSpeed + 2.:
+              # non loud alert if cruise disables below 25mph as expected (+ a little margin)
+              events.add(EventName.speedTooLow)
+            else:
+              events.add(EventName.cruiseDisabled)
       if self.CP.minEnableSpeed > 0 and CS.vEgo < 0.001:
         events.add(EventName.manualRestart)
 

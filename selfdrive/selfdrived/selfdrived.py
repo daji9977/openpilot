@@ -457,10 +457,19 @@ class SelfdriveD:
     if not self.enabled:
       self.mismatch_counter = 0
 
+    # Pass Mode: Reset mismatch counter during Pass Mode (Honda regen paddle lateral-only mode)
+    # When regen is active, panda sets controls_allowed=false via generic_rx_checks,
+    # but we want to maintain lateral control during Pass Mode
+    pass_mode_active = hasattr(CS, 'passMode') and CS.passMode
+    if pass_mode_active:
+      self.mismatch_counter = 0
+
     # All pandas not in silent mode must have controlsAllowed when openpilot is enabled
     if self.enabled and any(not ps.controlsAllowed for ps in self.sm['pandaStates']
            if ps.safetyModel not in IGNORED_SAFETY_MODES):
-      self.mismatch_counter += 1
+      # Don't increment mismatch counter during Pass Mode
+      if not pass_mode_active:
+        self.mismatch_counter += 1
 
     return CS
 
